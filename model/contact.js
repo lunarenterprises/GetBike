@@ -7,6 +7,7 @@ module.exports.addcontactQuery = async (name, email, message,phonenumber,issutyp
     var data= query(Query,[ name, email, message,phonenumber,issutype]);
     return  data;
 };
+
 module.exports.listcontactQuery=async()=>{
      var Query =`select * from ContactUs ;`
     var data= await query(Query);

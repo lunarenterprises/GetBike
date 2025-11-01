@@ -29,14 +29,14 @@ module.exports.ValidateResetToken =async(email,otp)=>{
     var data =await query(Query,[email,otp]);
     return  data;
 };
-module.exports.updateemail = async (email, verify_email) => {
-    var Query = `UPDATE user SET verify_email = ? WHERE u_email = ?`;
-    var data = await query(Query, [verify_email, email]);
+module.exports.updateemail = async (email, u_mobile_verify) => {
+    var Query = `UPDATE user SET u_mobile_verify = ? WHERE u_email = ?`;
+    var data = await query(Query, [u_mobile_verify, email]);
     return data;
 };
 
-module.exports.deleteUserQuery = async (email) => {
-    var Query = `DELETE FROM user WHERE u_email = ?`;
-    var data = await query(Query, [email]);
+module.exports.deleteUserQuery = async (mobile) => {
+    var Query = `DELETE FROM user WHERE u_mobile = ?`;
+    var data = await query(Query, [mobile]);
     return data;
 };

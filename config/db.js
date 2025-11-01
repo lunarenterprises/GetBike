@@ -1,11 +1,11 @@
 var mysql =require("mysql");
 //initialize pool
-var pool =mysql.createPool({
+var pool = mysql.createPool({
     connectionLimit:10,
-    host:"srv1132.hstgr.io",
-    user:"u160357475_getbike",
-    password:"123abcAB@123",
-    database:"u160357475_getbike",
+    host:process.env.DB_HOST,
+    user:process.env.DB_USER,
+    password:process.env.DB_PASSWORD,
+    database:process.env.DB_USERNAME,
     connectTimeout: 30000 , // <-- 30 seconds timeout
     dateStrings: true
 });

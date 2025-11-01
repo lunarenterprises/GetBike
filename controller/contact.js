@@ -5,69 +5,70 @@ var fs = require("fs");
 var path = require("path");
 
 module.exports.ContactUs = async (req, res) => {
-    try{
+    try {
         const form = new formidable.IncomingForm({ multiples: false });
         form.parse(req, async (err, fields, files) => {
             if (err) {
                 return res.send({
-                    result:false,
-                    message:'File upload failed!',
-                    data:err.message
+                    result: false,
+                    message: 'File upload failed!',
+                    data: err.message
                 })
             }
-    var { name, email, message, phonenumber, issuetype } = fields;
+            var { name, email, message, phonenumber, issuetype } = fields;
 
-    if (!name || !email || !message || !phonenumber || !issuetype) {
-        return res.send({
-            result: false,
-            message: "insufficient parameters",
-        });
-    }
-    if (!message) {
-        message = "no message"
-    }
+            if (!name || !email || !message || !phonenumber || !issuetype) {
+                return res.send({
+                    result: false,
+                    message: "insufficient parameters",
+                });
+            }
+            if (!message) {
+                message = "no message"
+            }
 
 
-    const contactInsert = await model.addcontactQuery(name, email, message, phonenumber, issuetype)
-   const  c_id = contactInsert.insertId;
+            const contactInsert = await model.addcontactQuery(name, email, message, phonenumber, issuetype)
+            const c_id = contactInsert.insertId;
 
-    
-                if (files && files.image) {
-                    // Normalize to array: handles both single and multiple image uploads
-                    const imageFiles = Array.isArray(files.image) ? files.image : [files.image];
-    
-                    for (const file of imageFiles) {
-                        if (!file || !file.filepath || !file.originalFilename) continue;
-    
-                        const oldPath = file.filepath;
-                        const newPath = path.join(process.cwd(), '/uploads/contact', file.originalFilename);
-    
-                        const rawData = fs.readFileSync(oldPath);
-                        fs.writeFileSync(newPath, rawData);
-    
-                        const imagePath = "/uploads/contact/" + file.originalFilename;
-    
-                        var insertResult = await model.AddcontactimageQuery(c_id , imagePath);
-                        // console.log(insertResult, "image insert result");
-                        console.log("Insert result:", insertResult);
-                    }
-    
 
-    let transporter = nodemailer.createTransport({
-        host: "smtp.hostinger.com",
-        port: 587,
-        auth: {
-            type: 'custom',
-            method: 'PLAIN',
-            user: process.env.EMAIL,
-            pass: process.env.PASSWORD,
-        },
-    });
+            if (files && files.image) {
+                // Normalize to array: handles both single and multiple image uploads
+                const imageFiles = Array.isArray(files.image) ? files.image : [files.image];
 
-    let data = [{
-        email: email,
-        subject: "MESSAGE FROM GETBIKE",
-        html: `<!DOCTYPE html>
+                for (const file of imageFiles) {
+                    if (!file || !file.filepath || !file.originalFilename) continue;
+
+                    const oldPath = file.filepath;
+                    const newPath = path.join(process.cwd(), '/uploads/contact', file.originalFilename);
+
+                    const rawData = fs.readFileSync(oldPath);
+                    fs.writeFileSync(newPath, rawData);
+
+                    const imagePath = "/uploads/contact/" + file.originalFilename;
+
+                    var insertResult = await model.AddcontactimageQuery(c_id, imagePath);
+                    // console.log(insertResult, "image insert result");
+                    console.log("Insert result:", insertResult);
+                }
+
+            }
+            
+            let transporter = nodemailer.createTransport({
+                host: "smtp.hostinger.com",
+                port: 587,
+                auth: {
+                    type: 'custom',
+                    method: 'PLAIN',
+                    user: process.env.EMAIL,
+                    pass: process.env.PASSWORD,
+                },
+            });
+
+            let data = [{
+                email: email,
+                subject: "MESSAGE FROM GETBIKE",
+                html: `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -130,11 +131,11 @@ module.exports.ContactUs = async (req, res) => {
 </html>
 
 `
-    },
-    {
-        email: 'jaisonlunar701@gmail.com',
-        subject: ` New Enquiry From : ${name}`,
-        html: `<!DOCTYPE html>
+            },
+            {
+                email: 'getbike09@gmail.com',
+                subject: ` New Enquiry From : ${name}`,
+                html: `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -195,39 +196,37 @@ module.exports.ContactUs = async (req, res) => {
 </body>
 </html>
 `
-    }]
+            }]
 
 
-    data.forEach(async (el) => {
-        let infos = await transporter.sendMail({
-            from: `GETBIKE<${process.env.EMAIL}>`,
-            to: el.email,
-            subject: el.subject,
-            html: el.html
-        });
-        nodemailer.getTestMessageUrl(infos);
+            data.forEach(async (el) => {
+                let infos = await transporter.sendMail({
+                    from: `GETBIKE<${process.env.EMAIL}>`,
+                    to: el.email,
+                    subject: el.subject,
+                    html: el.html
+                });
+                nodemailer.getTestMessageUrl(infos);
 
-    });
+            });
 
-    return res.send({
-        status: true,
-        message: "mail sent",
-    });
-}
-})
-    
-     } catch (error) {
+            return res.send({
+                status: true,
+                message: "mail sent",
+            });
+
+        })
+
+    } catch (error) {
         return res.send({
             result: false,
             message: error.message,
         });
-            
 
-
-        }
     }
-        
-        
+}
+
+
 module.exports.listcontact = async (req, res) => {
     try {
 

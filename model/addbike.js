@@ -13,12 +13,14 @@ module.exports.SelectImage = async () => {
     return data;
 
 }
-module.exports.AddBikeQuery = async (name, ratings, description, rate, location, extras, milage, geartype, fueltype, bhp, distance, max_speed, maintaince_status) => {
-    var Query = `insert into bikes(b_name,b_ratings,b_description,b_price,b_location,b_extras,b_milage,b_geartype,b_fueltype,b_bhp,distance,max_speed,maintaince_status) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
-    var data = await query(Query, [name, ratings, description, rate, location, extras, milage, geartype, fueltype, bhp, distance, max_speed, maintaince_status]);
+
+module.exports.AddBikeQuery = async (name, description, rate, location,latitude, longitude, extras, milage, geartype, fueltype, bhp, distance, max_speed, maintaince_status) => {
+    var Query = `insert into bikes(b_name,b_description,b_price,b_location,b_latitude,b_longitude,b_extras,b_milage,b_geartype,b_fueltype,b_bhp,distance,max_speed,maintaince_status) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)`;
+    var data = await query(Query, [name, description, rate, location,latitude, longitude, extras, milage, geartype, fueltype, bhp, distance, max_speed, maintaince_status]);
     return data;
 
 }
+
 module.exports.AddBikeimageQuery = async (bike_id, imagePath) => {
     var Query = `INSERT INTO bike_images(bike_id, image_path) VALUES (?, ?)`;
     var data = await query(Query, [bike_id, imagePath]);
@@ -26,11 +28,8 @@ module.exports.AddBikeimageQuery = async (bike_id, imagePath) => {
 }
 
 
-
-
-
 module.exports.listbikeQuery = async (condition) => {
-    var Query = `SELECT * FROM  bikes ${condition}`;
+    var Query = `SELECT * FROM  bikes ${condition} ORDER BY b_id DESC`;
     var data = query(Query);
     return data;
 }
@@ -89,5 +88,14 @@ module.exports.AddBikeresultCenterQuery = async (bike_id, centerId) => {
     var data = await query(Query, [bike_id, centerId]);
     return data;
 }
+module.exports.DeleteBikeCentersByBikeId = async (b_id) => {
+  var Query = `delete from bike_centers where bc_bike_id=? `;
+  var data = await query(Query, [b_id]);
+  return data;
+}
 
-
+module.exports.DeleteFilesQuery = async (b_id, fileKeys) => {
+  var Query = `delete from bike_images where bike_id=? and img_id not in (${fileKeys})`;
+  var data = await query(Query, [b_id]);
+  return data;
+}

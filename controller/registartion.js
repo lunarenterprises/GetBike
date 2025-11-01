@@ -16,34 +16,33 @@ module.exports.Register = async (req, res) => {
         var date = moment().format('YYYY-MM-DD')
         const checkmail = await model.CheckMail(email);
 
-        const checkmobile = await model.checkmobile(mobile);
+        let checkmobile = await model.checkmobile(mobile);
 
         if (checkmail[0]?.verify_email == false) {
             let deleteuser = await model.deleteUserQuery(email)
         }
         if (checkmail[0]?.verify_email == true) {
+
+            if (checkmobile.length > 0) {
+                return res.send({
+                    result: false,
+                    message: "phone number already registerd "
+                });
+
+            }
+
             return res.send({
                 result: false,
-                message: "email already registered"
+                message: "email already registerd "
             });
         }
 
-        if (checkmobile.length > 0) {
-            return res.send({
-                result: false,
-                message: "phone number already registered"
-            });
-
-
-        }
 
         var hashedpasssword = await bcrypt.hash(password, 10);
         var otp = Math.floor(1000 + Math.random() * 9000);
         var otpExpiry = moment().add(10, 'minutes').format('YYYY-MM-DD HH:mm:ss');
 
-
         let adduser = await model.AddUser(name, email, hashedpasssword, mobile, date, otp, otpExpiry, role);
-
 
         const userId = adduser.insertId;
 
@@ -62,7 +61,7 @@ module.exports.Register = async (req, res) => {
         let infos = await transporter.sendMail({
             from: "getbike<support@choiceglobal.in>",
             to: email,
-            subject: "change passoword",
+            subject: "Registration OTP",
             html: `<!DOCTYPE html>
                   <html lang="en">
                   <head>
@@ -120,9 +119,7 @@ module.exports.Register = async (req, res) => {
 
         return res.send({
             result: true,
-            message: "registerd successfully",
-
-
+            message: "registerd  successfully",
         })
 
     } catch (error) {

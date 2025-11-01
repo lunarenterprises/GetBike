@@ -2,7 +2,7 @@ var model = require('../model/addbike');
 var formidable = require("formidable");
 var fs = require("fs");
 const path = require("path");
-
+let moment = require('moment')
 
 module.exports.addbike = async (req, res) => {
 
@@ -16,18 +16,18 @@ module.exports.addbike = async (req, res) => {
                     data: err,
                 })
             }
-            let { name, ratings, description, rate, location, extras, milage, geartype, fueltype, bhp, distance, max_speed, maintaince_status, centerList } = fields;
 
+            let { name, description, rate, location, extras, milage, geartype, fueltype, bhp, distance, max_speed, maintaince_status, centerList, latitude, longitude } = fields;
 
-            if (!name || !ratings || !description || !rate || !location || !extras || !milage || !geartype || !fueltype || !bhp || !distance || !max_speed || !maintaince_status) {
+            if (!name || !description || !rate || !location || !extras || !milage || !geartype || !fueltype || !bhp || !max_speed || !maintaince_status) {
                 return res.send({
                     result: false,
                     message: "insufficent parameter",
-
                 })
             }
+            let date = moment().format('MM-DD HH:MM:SS')
             // 1️⃣ Insert bike details first
-            const bikeResult = await model.AddBikeQuery(name, ratings, description, rate, location, extras, milage, geartype, fueltype, bhp, distance, max_speed, maintaince_status);
+            const bikeResult = await model.AddBikeQuery(name, description, rate, location, latitude, longitude, extras, milage, geartype, fueltype, bhp, distance, max_speed, maintaince_status);
             const bike_id = bikeResult.insertId; // get new bike id
             centerList = JSON.parse(centerList)
             for (const centerId of centerList) {
@@ -44,12 +44,13 @@ module.exports.addbike = async (req, res) => {
                     if (!file || !file.filepath || !file.originalFilename) continue;
 
                     const oldPath = file.filepath;
-                    const newPath = path.join(process.cwd(), '/uploads/bikes', file.originalFilename);
+                    const filename = `${date}_${file.originalFilename}`;
+                    const newPath = path.join(process.cwd(), '/uploads/bikes', filename);
 
                     const rawData = fs.readFileSync(oldPath);
                     fs.writeFileSync(newPath, rawData);
 
-                    const imagePath = "/uploads/bikes/" + file.originalFilename;
+                    const imagePath = "/uploads/bikes/" + filename;
 
                     var insertResult = await model.AddBikeimageQuery(bike_id, imagePath);
 
@@ -58,7 +59,6 @@ module.exports.addbike = async (req, res) => {
                 }
 
                 if (insertResult.affectedRows > 0) {
-
 
                     return res.status(200).json({
                         result: true,
@@ -180,7 +180,9 @@ module.exports.editbikes = async (req, res) => {
                     data: err,
                 });
             }
-            const { b_id, name, ratings, description, rate, location, extras, milage, geartype, fueltype, bhp, distance, max_speed, delete_old_images, center } = fields;
+            const { b_id, name, description, rate, location, extras, milage, geartype, fueltype, bhp, distance, max_speed,maintaince_status,latitude, longitude, bikecenter,status } = fields;
+
+            let date = moment().format('MM-DD HH:MM:SS')
 
             if (!b_id) {
                 return res.send({
@@ -199,7 +201,6 @@ module.exports.editbikes = async (req, res) => {
             let updates = [];
 
             if (name) updates.push(`b_name='${name}'`);
-            if (ratings) updates.push(`b_ratings='${ratings}'`);
             if (description) updates.push(`b_description='${description}'`);
             if (rate) updates.push(`b_price='${rate}'`);
             if (location) updates.push(`b_location='${location}'`);
@@ -210,22 +211,52 @@ module.exports.editbikes = async (req, res) => {
             if (bhp) updates.push(`b_bhp='${bhp}'`);
             if (distance) updates.push(`distance='${distance}'`);
             if (max_speed) updates.push(`max_speed='${max_speed}'`);
-            if (center) updates.push(`center='${center}'`);
-
-
+            if (maintaince_status) updates.push(`maintaince_status='${maintaince_status}'`);
+            if (latitude) updates.push(`b_latitude='${latitude}'`);
+            if (longitude) updates.push(`b_longitude='${longitude}'`);
+            if (status) updates.push(`b_status='${status}'`);
 
             if (updates.length > 0) {
                 const updateQuery = `SET ${updates.join(', ')}`;
                 var updateResult = await model.UpdateBikesDetails(updateQuery, b_id);
             }
+            
             // 2️⃣ Delete old images if requested
-            if (delete_old_images === 'true') {
-                await model.DeleteBikeImages(b_id);
+            // 2️⃣ Update bike centers if provided
+            if (bikecenter) {
+                try {
+                    const bikeCenters = JSON.parse(bikecenter); // ensure it's parsed from string (form-data comes as string)
+
+                    // Delete all existing centers for this bike
+                    await model.DeleteBikeCentersByBikeId(b_id);
+
+                    // Insert new centers
+                    for (const center of bikeCenters) {
+                        await model.AddBikeresultCenterQuery(center.b_id, center.center_id);
+                    }
+                } catch (err) {
+                    console.error('Error updating bike centers:', err);
+                    return res.send({
+                        result: false,
+                        message: 'Failed to update bike centers',
+                        data: err.message,
+                    });
+                }
+            }
+
+
+            if (files) {
+                const fileKeys = Object.keys(files).filter(item => item !== 'image');
+                console.log("fileKeys :", fileKeys);
+
+                if (fileKeys.length > 0) {
+                    await model.DeleteFilesQuery(b_id, fileKeys);
+                }
             }
 
             if (files.image) {
                 const oldPath = files.image.filepath;
-                const fileName = files.image.originalFilename;
+                const fileName = `${date}_${files.originalFilename}`;
                 const newPath = path.join(process.cwd(), '/uploads/addbike/', fileName);
 
                 const rawData = fs.readFileSync(oldPath);
@@ -244,9 +275,10 @@ module.exports.editbikes = async (req, res) => {
 
             return res.send({
                 result: true,
-                message: 'bikes  updated successfully',
+                message: 'bikes updated successfully',
             });
         });
+
     } catch (error) {
         return res.send({
             result: false,

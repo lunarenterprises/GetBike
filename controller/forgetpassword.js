@@ -35,7 +35,7 @@ module.exports.forgotpassword = async (req, res) => {
             let infos = await transporter.sendMail({
                 from: "getbike<support@choiceglobal.in>",
                 to: email,
-                subject: "change passoword",
+                subject: "Change Password",
                 html: `<!DOCTYPE html>
             <html lang="en">
             <head>

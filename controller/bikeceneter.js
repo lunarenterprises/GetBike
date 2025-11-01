@@ -1,21 +1,18 @@
 var model = require('../model/bikecenter')
 
-
-
-
 module.exports.addbikecenter = async (req, res) => {
     try {
 
-        let { location, district } = req.body;
+        let { location, district,latitude, longitude } = req.body;
 
-
-        if (!location || !district) {
+        if (!location || !district || !latitude || !longitude) {
             return res.send({
                 result: false,
                 message: "insufficent parameter"
             });
         }
-        let addbike = await model.AddBikeCenterQuery(location, district);
+        
+        let addbike = await model.AddBikeCenterQuery(location, district,latitude, longitude);
         if (addbike.affectedRows > 0) {
             return res.send({
                 result: true,
@@ -57,8 +54,6 @@ module.exports.listcenter = async (req, res) => {
                 message: "data retrieved",
                 list: listcenter
 
-
-
             });
 
         } else {
@@ -67,8 +62,6 @@ module.exports.listcenter = async (req, res) => {
                 messsage: "data not found",
             });
         }
-
-
     }
     catch (error) {
         return res.send({
