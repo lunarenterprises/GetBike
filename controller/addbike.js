@@ -180,7 +180,7 @@ module.exports.editbikes = async (req, res) => {
                     data: err,
                 });
             }
-            const { b_id, name, description, rate, location, extras, milage, geartype, fueltype, bhp, distance, max_speed,maintaince_status,latitude, longitude, bikecenter,status } = fields;
+            const { b_id, name, description, rate, location, extras, milage, geartype, fueltype, bhp, distance, max_speed, maintaince_status, latitude, longitude, bikecenter, status } = fields;
 
             let date = moment().format('MM-DD HH:MM:SS')
 
@@ -203,7 +203,14 @@ module.exports.editbikes = async (req, res) => {
             if (name) updates.push(`b_name='${name}'`);
             if (description) updates.push(`b_description='${description}'`);
             if (rate) updates.push(`b_price='${rate}'`);
-            if (location) updates.push(`b_location='${location}'`);
+            if (location) {
+                const checkLocation = await model.CheckLocation(location)
+                if (checkLocation.length > 0) {
+                    updates.push(`b_location='${checkLocation[0]?.l_district}'`);
+                    updates.push(`b_latitude='${checkLocation[0]?.l_latitude}'`);
+                    updates.push(`b_longitude='${checkLocation[0]?.l_longitude}'`);
+                }
+            }
             if (extras) updates.push(`b_extras='${extras}'`);
             if (milage) updates.push(`b_milage='${milage}'`);
             if (geartype) updates.push(`b_geartype='${geartype}'`);
@@ -212,15 +219,13 @@ module.exports.editbikes = async (req, res) => {
             if (distance) updates.push(`distance='${distance}'`);
             if (max_speed) updates.push(`max_speed='${max_speed}'`);
             if (maintaince_status) updates.push(`maintaince_status='${maintaince_status}'`);
-            if (latitude) updates.push(`b_latitude='${latitude}'`);
-            if (longitude) updates.push(`b_longitude='${longitude}'`);
             if (status) updates.push(`b_status='${status}'`);
 
             if (updates.length > 0) {
                 const updateQuery = `SET ${updates.join(', ')}`;
                 var updateResult = await model.UpdateBikesDetails(updateQuery, b_id);
             }
-            
+
             // 2️⃣ Delete old images if requested
             // 2️⃣ Update bike centers if provided
             if (bikecenter) {

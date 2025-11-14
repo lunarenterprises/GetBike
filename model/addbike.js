@@ -14,9 +14,9 @@ module.exports.SelectImage = async () => {
 
 }
 
-module.exports.AddBikeQuery = async (name, description, rate, location,latitude, longitude, extras, milage, geartype, fueltype, bhp, distance, max_speed, maintaince_status) => {
+module.exports.AddBikeQuery = async (name, description, rate, location, latitude, longitude, extras, milage, geartype, fueltype, bhp, distance, max_speed, maintaince_status) => {
     var Query = `insert into bikes(b_name,b_description,b_price,b_location,b_latitude,b_longitude,b_extras,b_milage,b_geartype,b_fueltype,b_bhp,distance,max_speed,maintaince_status) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?)`;
-    var data = await query(Query, [name, description, rate, location,latitude, longitude, extras, milage, geartype, fueltype, bhp, distance, max_speed, maintaince_status]);
+    var data = await query(Query, [name, description, rate, location, latitude, longitude, extras, milage, geartype, fueltype, bhp, distance, max_speed, maintaince_status]);
     return data;
 
 }
@@ -89,13 +89,18 @@ module.exports.AddBikeresultCenterQuery = async (bike_id, centerId) => {
     return data;
 }
 module.exports.DeleteBikeCentersByBikeId = async (b_id) => {
-  var Query = `delete from bike_centers where bc_bike_id=? `;
-  var data = await query(Query, [b_id]);
-  return data;
+    var Query = `delete from bike_centers where bc_bike_id=? `;
+    var data = await query(Query, [b_id]);
+    return data;
 }
 
 module.exports.DeleteFilesQuery = async (b_id, fileKeys) => {
-  var Query = `delete from bike_images where bike_id=? and img_id not in (${fileKeys})`;
-  var data = await query(Query, [b_id]);
-  return data;
+    var Query = `delete from bike_images where bike_id=? and img_id not in (${fileKeys})`;
+    var data = await query(Query, [b_id]);
+    return data;
+}
+
+module.exports.CheckLocation = async (location) => {
+    const Query = `select * from location_center where l_id=?`
+    return await query(Query, [location])
 }
